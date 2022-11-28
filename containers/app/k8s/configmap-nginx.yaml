@@ -1,0 +1,24 @@
+apiVersion: v1
+data:
+  nginx.conf: |2-
+        # Configuration for the server
+        server {
+
+            # Running port
+            listen 8081 default_server;
+
+            server_name _;
+            root /usr/share/nginx/html;
+
+            # Proxying the connections connections
+            location / {
+                proxy_pass         http://localhost:3000/;
+            }
+
+            location /hello {
+                proxy_pass         http://localhost:3000/hello;
+            }
+        }
+kind: ConfigMap
+metadata:
+  name: nginx

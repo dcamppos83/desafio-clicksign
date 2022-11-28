@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-ruby
+  labels:
+    app: hello-ruby
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-ruby
+  template:
+    metadata:
+      labels:
+        app: hello-ruby
+    spec:
+      containers:
+      - name: hello-ruby
+        image: ${{ secrets.DOCKERHUB_USERNAME }}/hello-ruby:${{ steps.vars.outputs.short_sha }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        env:
+        - name: MESSAGE
+          value: "Development"
+      - name: nginx
+        image: nginx:1.15
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8081
+        resources:
+          limits:
+            cpu: 300m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d
+          name: conf
+      volumes:
+      - name: conf
+        configMap:
+          name: nginx
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: hello-ruby
+  labels:
+    app: hello-ruby
+spec:
+  selector:
+    app: hello-ruby
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8081
+  type: LoadBalancer
